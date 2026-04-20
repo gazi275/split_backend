@@ -4,6 +4,7 @@ import httpStatus from "http-status";
 import handleZodError from "../../errors/handleZodError";
 import parsePrismaValidationError from "../../errors/parsePrismaValidationError";
 import ApiError from "../../errors/ApiErrors";
+import { ZodError } from "zod";
 
 // TODO Replace `config.NODE_ENV` with your actual environment configuration
 
@@ -29,6 +30,13 @@ const GlobalErrorHandler = (
     statusCode = err.statusCode;
     message = err.message;
     errorSources = [{ type: "ApiError", details: err.message }];
+  }
+  // Handle Zod validation errors
+  else if (err instanceof ZodError) {
+    const simplifiedError = handleZodError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorSources = simplifiedError.errorSources;
   }
   // handle prisma client validation errors
   else if (err instanceof Prisma.PrismaClientValidationError) {

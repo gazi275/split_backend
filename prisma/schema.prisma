@@ -38,8 +38,21 @@ model User {
   updatedAt           DateTime   @updatedAt
 
   otps Otp[]
+  panelLayout PanelLayout?
 
   @@map("users")
+}
+
+model PanelLayout {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @unique @db.ObjectId
+  layout    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("panel_layouts")
 }
 
 model Otp {
