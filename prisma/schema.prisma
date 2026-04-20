@@ -30,8 +30,6 @@ model User {
   password            String
   role                UserRole   @default(USER)
   status              UserStatus @default(ACTIVE)
-  profileImage        String?
-  phoneNumber         String?
   isVerified          Boolean    @default(false)
   needsPasswordChange Boolean    @default(false)
   createdAt           DateTime   @default(now())
