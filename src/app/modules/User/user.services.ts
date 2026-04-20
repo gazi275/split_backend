@@ -12,7 +12,7 @@ import { AuthServices } from "../Auth/auth.service"
 import { jwtHelpers } from "../../../helpers/jwtHelpers"
 import { Secret } from "jsonwebtoken"
 
-// Create a new user in the database.
+// Create a new user in the database - Direct registration (no OTP)
 const createUserIntoDb = async (payload: User) => {
   const existingUser = await prisma.user.findFirst({
     where: {
@@ -35,7 +35,7 @@ const createUserIntoDb = async (payload: User) => {
 
   const result = await prisma.$transaction(async (prisma) => {
     const result = await prisma.user.create({
-      data: { ...payload, password: hashedPassword },
+      data: { ...payload, password: hashedPassword, isVerified: true },
       select: {
         id: true,
         name: true,
@@ -48,9 +48,23 @@ const createUserIntoDb = async (payload: User) => {
     return result
   })
 
-  await AuthServices.sendOtp(payload.email)
+  // Generate and return token directly
+  const user = await prisma.user.findUnique({
+    where: { email: payload.email },
+  })
 
-  return result
+  const accessToken = jwtHelpers.generateToken(
+    {
+      id: user!.id,
+      email: user!.email,
+      role: user!.role,
+      isVerified: user!.isVerified,
+    },
+    config.jwt.jwt_secret as Secret,
+    config.jwt.expires_in as string
+  )
+
+  return { ...result, token: accessToken }
 }
 
 const verifyOtpAndRegister = async (email: string, otp: string) => {

@@ -7,7 +7,13 @@ import httpStatus from "http-status"
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthServices.loginUser(req.body)
 
-  res.cookie("token", result.token, { httpOnly: true })
+  res.cookie('token', result.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  })
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     message: "Login successful",
@@ -16,10 +22,10 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
 })
 const logoutUser = catchAsync(async (req: Request, res: Response) => {
   // Clear the token cookie
-  res.clearCookie("token", {
+  res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
   })
 
   sendResponse(res, {

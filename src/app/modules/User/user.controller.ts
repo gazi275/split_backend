@@ -6,10 +6,24 @@ import { Request, Response } from "express"
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const result = await userService.createUserIntoDb(req.body)
+  
+  // Set token in secure httpOnly cookie
+  res.cookie('token', result.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  })
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
-    message: "User Registered successfully!",
-    data: result,
+    message: "User Registered successfully! Please login.",
+    data: {
+      id: result.id,
+      name: result.name,
+      email: result.email,
+      token: result.token,
+    },
   })
 })
 
