@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum OtpPurpose {
+  VERIFY_EMAIL
+  FORGOT_PASSWORD
+}
+
+model User {
+  id                  String     @id @default(auto()) @map("_id") @db.ObjectId
+  name                String?
+  email               String     @unique
+  password            String
+  role                UserRole   @default(USER)
+  status              UserStatus @default(ACTIVE)
+  profileImage        String?
+  phoneNumber         String?
+  isVerified          Boolean    @default(false)
+  needsPasswordChange Boolean    @default(false)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  otps Otp[]
+
+  @@map("users")
+}
+
+model Otp {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String     @db.ObjectId
+  otp       String
+  purpose   OtpPurpose @default(FORGOT_PASSWORD)
+  expiresAt DateTime
+  createdAt DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("otps")
+}
