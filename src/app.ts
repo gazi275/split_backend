@@ -6,10 +6,29 @@ import cookieParser from "cookie-parser"
 import GlobalErrorHandler from "./app/middlewares/globalErrorHandler"
 import router from "./app/routes"
 import morgan from "morgan"
+import config from "./config"
 
 const app: Application = express()
+
+const defaultOrigins = [
+  "http://localhost:3001",
+  "http://localhost:3000",
+  "http://localhost:5173",
+]
+
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...config.frontend_urls]))
+
 export const corsOptions = {
-  origin: ["http://localhost:3001", "http://localhost:3000", "http://localhost:5173"],
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow non-browser tools like curl/Postman that may not send an Origin header.
+    if (!origin) return callback(null, true)
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true)
+    }
+
+    return callback(new Error("CORS origin not allowed"))
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
