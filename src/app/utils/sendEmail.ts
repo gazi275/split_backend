@@ -3,33 +3,34 @@ import config from "../../config"
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   try {
+    if (!config.smtp.user || !config.smtp.pass) {
+      throw new Error("Missing SMTP credentials")
+    }
+
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false, // Use TLS, `false` ensures STARTTLS
+      host: config.smtp.host,
+      port: config.smtp.port,
+      secure: config.smtp.secure,
       auth: {
-        user: config.brevo_email, // Your email address
-        pass: config.brevo_pass, // Your app-specific password
+        user: config.smtp.user,
+        pass: config.smtp.pass,
       },
     })
 
     const mailOptions = {
-      from: `"Support Team" <${config.email}>`, // Sender's name and email
-      to, // Recipient's email
-      subject, // Email subject
-      text: html.replace(/<[^>]+>/g, ""), // Generate plain text version by stripping HTML tags
-      html, // HTML email body
+      from: `"Support Team" <${config.smtp.from}>`,
+      to,
+      subject,
+      text: html.replace(/<[^>]+>/g, ""),
+      html,
     }
 
-    // Send the email
     const info = await transporter.sendMail(mailOptions)
-
-    // Log the success message
     console.log(`Email sent:  ${info.messageId}`)
     return info.messageId
   } catch (error) {
-    // @ts-ignore
-    console.error(`Error sending email: ${error.message}`)
-    throw new Error("Failed to send email. Please try again later.")
+    const errorMessage = error instanceof Error ? error.message : "Unknown email error"
+    console.error(`Error sending email: ${errorMessage}`)
+    throw new Error(`Failed to send email. ${errorMessage}`)
   }
 }

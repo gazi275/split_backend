@@ -19,4 +19,12 @@ export default {
   email: process.env.EMAIL,
   brevo_email: process.env.EMAIL,
   brevo_pass: process.env.BREVO_PASS,
+  smtp: {
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: process.env.SMTP_SECURE === "true",
+    user: process.env.SMTP_USER || process.env.EMAIL,
+    pass: process.env.SMTP_PASS || process.env.BREVO_PASS,
+    from: process.env.SMTP_FROM || process.env.EMAIL,
+  },
 }
